@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Feliz Cumpleaños Sofi! 🎉</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #0d1b2a 0%, #0b091a 70%, #03040d 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Marco de luces LED estilo neón festivo */
+        .neon-border {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            border: 4px solid rgba(56, 189, 248, 0.3);
+            box-shadow: inset 0 0 25px rgba(56, 189, 248, 0.2), 0 0 25px rgba(56, 189, 248, 0.2);
+            pointer-events: none;
+            z-index: 100;
+            animation: parpadeoLed 4s infinite alternate;
+        }
+
+        @keyframes parpadeoLed {
+            0% { border-color: rgba(56, 189, 248, 0.3); box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.15), 0 0 20px rgba(56, 189, 248, 0.15); }
+            50% { border-color: rgba(250, 204, 21, 0.3); box-shadow: inset 0 0 30px rgba(250, 204, 21, 0.2), 0 0 30px rgba(250, 204, 21, 0.2); }
+            100% { border-color: rgba(74, 222, 128, 0.3); box-shadow: inset 0 0 20px rgba(74, 222, 128, 0.15), 0 0 20px rgba(74, 222, 128, 0.15); }
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Contenedor de la interfaz inicial estilizado */
+        .ui-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 40px 45px;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(56, 189, 248, 0.15);
+            max-width: 440px;
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        .ui-container h1 {
+            font-size: 1.6rem;
+            background: linear-gradient(135deg, #fff 30%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .ui-container p {
+            font-size: 0.92rem;
+            color: #94a3b8;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: #ffffff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 35px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 0.5px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 12px 35px rgba(14, 165, 233, 0.6);
+            background: linear-gradient(135deg, #38bdf8, #1d4ed8);
+        }
+
+        .start-btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="neon-border"></div>
+
+    <div class="ui-container" id="uiContainer">
+        <h1>🎉 ¡Hora de Celebrar! 🎉</h1>
+        <p>Hola, Sofi. No sabía qué hacer, la verdad, pero mientras intentaba armar algo iba imaginando más cosas. Solo espero que no parezca una mazamorra y que sea algo que te guste. Simplemente quiero desearte un muy feliz día y que todo te salga bien siempre. Ahí estaré para ser tu hater, como siempre. Espero que la pases súper bien con tu familia, guárdame un trozo de pastel y, para no hacerla más larga, ¡espero que te guste lo que hice!.</p>
+        <button class="start-btn" onclick="iniciarCelebracion()">🎆 Iniciar Espectáculo 🎆</button>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Sistema de Audio Real
+        let audioCtx = null;
+        function iniciarAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Silbido de cohete
+        function playSilbidoRealista() {
+            try {
+                iniciarAudio();
+                if (!audioCtx) return;
+
+                let duration = 0.9;
+                let bufferSize = audioCtx.sampleRate * duration;
+                let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                let output = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+
+                let noiseSource = audioCtx.createBufferSource();
+                noiseSource.buffer = buffer;
+
+                let filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.Q.setValueAtTime(5, audioCtx.currentTime);
+                filter.frequency.setValueAtTime(250, audioCtx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(1600, audioCtx.currentTime + duration);
+
+                let gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime); 
+                gain.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime + (duration * 0.5));
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+                noiseSource.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                noiseSource.start();
+                noiseSource.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        // Explosión de cohete potente
+        function playExplosionRealista() {
+            try {
+                iniciarAudio();
+                if (!audioCtx) return;
+
+                let duration = 1.8;
+                let bufferSize = audioCtx.sampleRate * duration;
+                let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                let output = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+
+                let whiteNoise = audioCtx.createBufferSource();
+                whiteNoise.buffer = buffer;
+
+                let filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(500, audioCtx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + duration);
+
+                let gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(2.2, audioCtx.currentTime); 
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+                whiteNoise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                whiteNoise.start();
+                whiteNoise.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        // Sistema optimizado de aplausos reales (ráfagas múltiples garantizadas)
+        function playAplausosRealistas() {
+            try {
+                iniciarAudio();
+                if (!audioCtx) return;
+
+                // Programar múltiples minirráfagas de aplausos durante 5 segundos
+                let tiempoInicio = audioCtx.currentTime;
+                
+                for (let k = 0; k < 35; k++) {
+                    let offset = Math.random() * 4.5; // Distribuir los aplausos en el tiempo
+                    let duracionGolpe = 0.08 + Math.random() * 0.06;
+                    
+                    let bufferSize = audioCtx.sampleRate * duracionGolpe;
+                    let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    let output = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
+
+                    let noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+
+                    let filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(1200 + Math.random() * 600, tiempoInicio + offset);
+                    filter.Q.setValueAtTime(1.5, tiempoInicio + offset);
+
+                    let gain = audioCtx.createGain();
+                    gain.gain.setValueAtTime(0.8, tiempoInicio + offset);
+                    gain.gain.exponentialRampToValueAtTime(0.01, tiempoInicio + offset + duracionGolpe);
+
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    noise.start(tiempoInicio + offset);
+                    noise.stop(tiempoInicio + offset + duracionGolpe);
+                }
+            } catch(e) {}
+        }
+
+        // Estrellas de fondo
+        let estrellas = [];
+        for (let i = 0; i < 180; i++) {
+            estrellas.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 1.8 + 0.2,
+                alpha: Math.random(),
+                speed: Math.random() * 0.02 + 0.005
+            });
+        }
+
+        function dibujarEstrellas() {
+            estrellas.forEach(star => {
+                star.alpha += star.speed;
+                if (star.alpha > 1 || star.alpha < 0.2) {
+                    star.speed = -star.speed;
+                }
+                ctx.fillStyle = "#ffffff";
+                ctx.globalAlpha = Math.abs(star.alpha);
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+        }
+
+        // Confeti flotante
+        let confetis = [];
+        for (let i = 0; i < 60; i++) {
+            confetis.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 6 + 3,
+                speedY: Math.random() * 0.8 + 0.3,
+                speedX: Math.sin(i) * 0.5,
+                color: ['#38bdf8', '#facc15', '#4ade80', '#f43f5e', '#a855f7'][Math.floor(Math.random() * 5)],
+                alpha: Math.random() * 0.6 + 0.2,
+                rotation: Math.random() * 360,
+                rotSpeed: Math.random() * 2 - 1
+            });
+        }
+
+        function actualizarYDibujarConfeti() {
+            confetis.forEach(c => {
+                c.y += c.speedY;
+                c.x += c.speedX;
+                c.rotation += c.rotSpeed;
+
+                if (c.y > canvas.height) {
+                    c.y = -10;
+                    c.x = Math.random() * canvas.width;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = c.alpha;
+                ctx.translate(c.x, c.y);
+                ctx.rotate((c.rotation * Math.PI) / 180);
+                ctx.fillStyle = c.color;
+                ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size * 0.6);
+                ctx.restore();
+            });
+            ctx.globalAlpha = 1.0;
+        }
+
+        // --- GLOBOS FLOTANTES ---
+        let globosFiesta = [];
+        function generarGlobosFiesta() {
+            for (let i = 0; i < 22; i++) {
+                globosFiesta.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + 50 + Math.random() * 100,
+                    radiusX: Math.random() * 15 + 16,
+                    radiusY: Math.random() * 20 + 22,
+                    speedY: Math.random() * 1.5 + 1.1,
+                    speedX: (Math.random() - 0.5) * 0.8,
+                    color: ['#38bdf8', '#facc15', '#f43f5e', '#a855f7', '#4ade80', '#fb923c'][Math.floor(Math.random() * 6)],
+                    alpha: Math.random() * 0.5 + 0.5
+                });
+            }
+        }
+
+        function actualizarYDibujarGlobos() {
+            globosFiesta.forEach(g => {
+                g.y -= g.speedY;
+                g.x += g.speedX;
+
+                ctx.save();
+                ctx.globalAlpha = g.alpha;
+                ctx.fillStyle = g.color;
+
+                ctx.beginPath();
+                ctx.ellipse(g.x, g.y, g.radiusX, g.radiusY, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(g.x - 3, g.y + g.radiusY);
+                ctx.lineTo(g.x + 3, g.y + g.radiusY);
+                ctx.lineTo(g.x, g.y + g.radiusY + 6);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(g.x, g.y + g.radiusY + 6);
+                ctx.lineTo(g.x + Math.sin(g.y * 0.05) * 6, g.y + g.radiusY + 35);
+                ctx.stroke();
+
+                ctx.restore();
+            });
+        }
+
+        // --- LAS 10 FOTOS EN ORDEN EXACTO (1.1 a 1.10) ---
+        const urlsImagenes = [
+            "1.1.jpg", "1.2.jpg", "1.3.jpg", "1.4.jpg", "1.5.jpg",
+            "1.6.jpg", "1.7.jpg", "1.8.jpg", "1.9.jpg", "1.10.jpg"
+        ];
+
+        let listaFotosCargadas = [];
+        urlsImagenes.forEach(url => {
+            let img = new Image();
+            img.src = url;
+            listaFotosCargadas.push(img);
+        });
+
+        let cuadroActivo = {
+            imgIndex: 0,
+            x: 0,
+            y: 0,
+            size: 0,
+            alpha: 0,
+            estadoFade: 'apareciendo',
+            temporizadorVisible: 0
+        };
+
+        function seleccionarSiguienteFotoEnOrden() {
+            if (cuadroActivo.imgIndex < listaFotosCargadas.length - 1) {
+                cuadroActivo.imgIndex++;
+                cuadroActivo.size = Math.min(canvas.width * 0.55, 260);
+                cuadroActivo.x = Math.random() * (canvas.width - cuadroActivo.size - 40) + 20;
+                cuadroActivo.y = Math.random() * (canvas.height - cuadroActivo.size - 120) + 60;
+                cuadroActivo.alpha = 0;
+                cuadroActivo.estadoFade = 'apareciendo';
+                cuadroActivo.temporizadorVisible = 0;
+            } else {
+                cuadroActivo.alpha = 0;
+            }
+        }
+
+        let opacidadGlobalRompecabezas = 1;
+
+        function manejarCuadroRompecabezas() {
+            if (estado === 'lanzando') {
+                if (cuadroActivo.size === 0) {
+                    cuadroActivo.imgIndex = 0; 
+                    cuadroActivo.size = Math.min(canvas.width * 0.55, 260);
+                    cuadroActivo.x = canvas.width / 2 - cuadroActivo.size / 2;
+                    cuadroActivo.y = canvas.height / 2 - cuadroActivo.size / 2;
+                    cuadroActivo.alpha = 0;
+                    cuadroActivo.estadoFade = 'apareciendo';
+                    cuadroActivo.temporizadorVisible = 0;
+                }
+
+                if (cuadroActivo.estadoFade === 'apareciendo') {
+                    cuadroActivo.alpha += 1 / 15; 
+                    if (cuadroActivo.alpha >= 1) {
+                        cuadroActivo.alpha = 1;
+                        cuadroActivo.estadoFade = 'visible';
+                    }
+                } 
+                else if (cuadroActivo.estadoFade === 'visible') {
+                    cuadroActivo.temporizadorVisible++;
+                    if (cuadroActivo.temporizadorVisible > 60) { 
+                        cuadroActivo.estadoFade = 'desapareciendo';
+                    }
+                } 
+                else if (cuadroActivo.estadoFade === 'desapareciendo') {
+                    cuadroActivo.alpha -= 1 / 15; 
+                    if (cuadroActivo.alpha <= 0) {
+                        cuadroActivo.alpha = 0;
+                        seleccionarSiguienteFotoEnOrden();
+                    }
+                }
+
+                let img = listaFotosCargadas[cuadroActivo.imgIndex];
+                if (img && img.complete && img.naturalWidth !== 0 && cuadroActivo.alpha > 0) {
+                    ctx.save();
+                    ctx.globalAlpha = cuadroActivo.alpha * opacidadGlobalRompecabezas;
+                    
+                    ctx.shadowColor = "rgba(56, 189, 248, 0.6)";
+                    ctx.shadowBlur = 35 * (2 - cuadroActivo.alpha);
+
+                    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+                    ctx.fillRect(cuadroActivo.x - 6, cuadroActivo.y - 6, cuadroActivo.size + 12, cuadroActivo.size + 12);
+
+                    ctx.drawImage(img, cuadroActivo.x, cuadroActivo.y, cuadroActivo.size, cuadroActivo.size);
+
+                    ctx.strokeStyle = "rgba(250, 204, 21, 0.8)";
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeRect(cuadroActivo.x - 6, cuadroActivo.y - 6, cuadroActivo.size + 12, cuadroActivo.size + 12);
+
+                    ctx.restore();
+                }
+            } 
+            else if (estado === 'reordenando' && opacidadGlobalRompecabezas > 0) {
+                opacidadGlobalRompecabezas -= 0.03;
+                if (opacidadGlobalRompecabezas < 0) opacidadGlobalRompecabezas = 0;
+            }
+        }
+
+        let letrasObjetos = [];
+        let cohetesActivos = [];
+        let particulasExplosion = [];
+        let temporizadorFondo = 0;
+        let estado = 'esperando';
+        let contadorAnimacion = 0;
+        let tiempoInicioLanzamiento = 0;
+        const DURACION_LANZAMIENTO_MS = 15000; // 15 segundos exactos
+        let sonidoFestejoReproducido = false;
+
+        function prepararLetras() {
+            letrasObjetos = [];
+            let esCelular = window.innerWidth < 600;
+            let lineasTexto = esCelular ? ["FELIZ", "CUMPLEAÑOS", "SOFI"] : ["FELIZ CUMPLEAÑOS", "SOFI"];
+            
+            let fontSize = esCelular 
+                ? Math.min(window.innerWidth * 0.085, 38) 
+                : Math.min(window.innerWidth * 0.06, 64);
+                
+            let lineHeight = fontSize * 1.3;
+            let totalHeight = lineasTexto.length * lineHeight;
+            let startY = (canvas.height - totalHeight) / 2 + lineHeight / 2;
+
+            let globalIndex = 0;
+
+            lineasTexto.forEach((linea, lineaIdx) => {
+                ctx.font = `900 ${fontSize}px 'Segoe UI', sans-serif`;
+                let anchoLinea = ctx.measureText(linea).width;
+                let startX = (canvas.width - anchoLinea) / 2;
+                let currentX = startX;
+                let finalY = startY + (lineaIdx * lineHeight);
+
+                for (let i = 0; i < linea.length; i++) {
+                    let char = linea[i];
+                    let charWidth = ctx.measureText(char).width;
+                    let finalX = currentX + charWidth / 2;
+
+                    let randomX = Math.random() * (canvas.width - 200) + 100;
+                    let randomY = Math.random() * (canvas.height - 300) + 150;
+
+                    let coloresHsl = [
+                        'hsl(190, 95%, 70%)',
+                        'hsl(50, 95%, 70%)',
+                        'hsl(140, 85%, 65%)',
+                        'hsl(30, 95%, 70%)',
+                        'hsl(310, 90%, 75%)'
+                    ];
+
+                    letrasObjetos.push({
+                        char: char,
+                        x: randomX,
+                        y: randomY,
+                        finalX: finalX,
+                        finalY: finalY,
+                        alpha: 0,
+                        scale: 0.2,
+                        color: coloresHsl[globalIndex % coloresHsl.length],
+                        index: globalIndex
+                    });
+
+                    currentX += charWidth;
+                    globalIndex++;
+                }
+            });
+        }
+
+        function iniciarCelebracion() {
+            iniciarAudio();
+            let ui = document.getElementById("uiContainer");
+            ui.style.opacity = "0";
+            ui.style.transform = "scale(0.9)";
+            setTimeout(() => {
+                ui.style.display = "none";
+            }, 1000);
+
+            prepararLetras();
+            estado = 'lanzando';
+            tiempoInicioLanzamiento = Date.now();
+            sonidoFestejoReproducido = false;
+
+            let letrasSinEspacios = letrasObjetos.filter(l => l.char !== " ");
+            let intervaloPorLetra = (DURACION_LANZAMIENTO_MS - 2000) / letrasSinEspacios.length;
+
+            let contadorLanzamiento = 0;
+            letrasObjetos.forEach((obj) => {
+                if (obj.char === " ") {
+                    obj.alpha = 1;
+                    obj.scale = 1.0;
+                    return;
+                }
+
+                let delay = contadorLanzamiento * intervaloPorLetra;
+                contadorLanzamiento++;
+
+                setTimeout(() => {
+                    if (estado === 'lanzando') {
+                        cohetesActivos.push({
+                            x: Math.random() * (canvas.width - 200) + 100,
+                            y: canvas.height,
+                            targetY: obj.y,
+                            targetX: obj.x,
+                            speed: Math.random() * 1.5 + 4.5,
+                            letraIndex: obj.index
+                        });
+                        playSilbidoRealista();
+                    }
+                }, delay);
+            });
+        }
+
+        function crearParticulasExplosion(x, y, color) {
+            playExplosionRealista();
+            for (let i = 0; i < 50; i++) {
+                let angulo = Math.random() * Math.PI * 2;
+                let velocidad = Math.random() * 5 + 1.5;
+                particulasExplosion.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angulo) * velocidad,
+                    vy: Math.sin(angulo) * velocidad,
+                    color: color,
+                    alpha: 1,
+                    size: Math.random() * 2.5 + 1,
+                    desvanecimiento: Math.random() * 0.025 + 0.01
+                });
+            }
+        }
+
+        function lanzarFuegoArtificialFondo() {
+            let targetX = Math.random() * (canvas.width - 300) + 150;
+            let targetY = Math.random() * (canvas.height * 0.5) + 80;
+            let color = `hsl(${Math.random() * 360}, 90%, 65%)`;
+
+            playSilbidoRealista();
+            cohetesActivos.push({
+                x: targetX + (Math.random() * 100 - 50),
+                y: canvas.height,
+                targetY: targetY,
+                targetX: targetX,
+                speed: Math.random() * 2 + 5,
+                esFondo: true,
+                colorFondo: color
+            });
+        }
+
+        function animar() {
+            ctx.fillStyle = "rgba(11, 9, 26, 0.25)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            dibujarEstrellas();
+            actualizarYDibujarConfeti();
+
+            manejarCuadroRompecabezas();
+
+            if (estado === 'lanzando' && (Date.now() - tiempoInicioLanzamiento >= DURACION_LANZAMIENTO_MS)) {
+                estado = 'reordenando';
+                letrasObjetos.forEach(obj => {
+                    if (obj.alpha === 0) {
+                        obj.alpha = 1;
+                        obj.scale = 1.0;
+                    }
+                });
+
+                // Activar los aplausos mejorados y los globos al armarse las letras
+                if (!sonidoFestejoReproducido) {
+                    playAplausosRealistas();
+                    generarGlobosFiesta();
+                    sonidoFestejoReproducido = true;
+                }
+            }
+
+            if (estado === 'reordenando') {
+                actualizarYDibujarGlobos();
+
+                temporizadorFondo++;
+                if (temporizadorFondo > 90) {
+                    lanzarFuegoArtificialFondo();
+                    temporizadorFondo = 0;
+                }
+            }
+
+            for (let i = cohetesActivos.length - 1; i >= 0; i--) {
+                let c = cohetesActivos[i];
+
+                if (c.esFondo) {
+                    c.y -= c.speed;
+                    ctx.save();
+                    ctx.shadowColor = "#fde047";
+                    ctx.shadowBlur = 10;
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(c.x - 1.5, c.y, 3, 16);
+                    ctx.restore();
+
+                    if (c.y <= c.targetY) {
+                        crearParticulasExplosion(c.targetX, c.targetY, c.colorFondo);
+                        cohetesActivos.splice(i, 1);
+                    }
+                } else {
+                    let obj = letrasObjetos[c.letraIndex];
+                    let dx = obj.x - c.x;
+                    let dy = obj.y - c.y;
+                    c.y -= c.speed;
+                    c.x += dx * 0.05;
+
+                    ctx.save();
+                    ctx.shadowColor = "#fde047";
+                    ctx.shadowBlur = 10;
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(c.x - 1.5, c.y, 3, 16);
+                    ctx.restore();
+
+                    if (c.y <= obj.y) {
+                        crearParticulasExplosion(obj.x, obj.y, obj.color);
+                        obj.alpha = 1;
+                        obj.scale = 1.6;
+                        cohetesActivos.splice(i, 1);
+                    }
+                }
+            }
+
+            for (let i = particulasExplosion.length - 1; i >= 0; i--) {
+                let p = particulasExplosion[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.05;
+                p.alpha -= p.desvanecimiento;
+
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.alpha);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (p.alpha <= 0) {
+                    particulasExplosion.splice(i, 1);
+                }
+            }
+
+            let esCelular = window.innerWidth < 600;
+            let fontSize = esCelular 
+                ? Math.min(window.innerWidth * 0.085, 38) 
+                : Math.min(window.innerWidth * 0.06, 64);
+
+            ctx.font = `900 ${fontSize}px 'Segoe UI', sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            contadorAnimacion += 0.04;
+
+            letrasObjetos.forEach((obj, index) => {
+                if (obj.alpha > 0) {
+                    if (estado === 'reordenando') {
+                        obj.x += (obj.finalX - obj.x) * 0.05;
+                        obj.y += (obj.finalY - obj.y) * 0.05;
+                        if (obj.scale > 1) obj.scale -= 0.015;
+                    }
+
+                    let floatY = 0;
+                    if (estado === 'reordenando' && Math.abs(obj.finalX - obj.x) < 2) {
+                        floatY = Math.sin(contadorAnimacion + index * 0.2) * 4;
+                    }
+
+                    ctx.save();
+                    ctx.globalAlpha = obj.alpha;
+                    
+                    ctx.shadowColor = obj.color;
+                    ctx.shadowBlur = 30;
+                    ctx.fillStyle = "#ffffff";
+                    
+                    ctx.translate(obj.x, obj.y + floatY);
+                    ctx.scale(obj.scale, obj.scale);
+                    
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = obj.color;
+                    ctx.strokeText(obj.char, 0, 0);
+                    ctx.fillText(obj.char, 0, 0);
+                    
+                    ctx.restore();
+                }
+            });
+
+            if (estado === 'reordenando') {
+                ctx.save();
+                let subfontSize = esCelular ? 15 : 18;
+                ctx.font = `600 ${subfontSize}px 'Segoe UI', sans-serif`;
+                ctx.textAlign = "center";
+                ctx.shadowColor = "#38bdf8";
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+                let subY = esCelular ? canvas.height * 0.82 : canvas.height * 0.72;
+                ctx.fillText("¡Que tengas un día extraordinario!", canvas.width / 2, subY + Math.sin(contadorAnimacion * 1.5) * 3);
+                ctx.restore();
+            }
+
+            requestAnimationFrame(animar);
+        }
+
+        animar();
+    </script>
+</body>
+</html>
